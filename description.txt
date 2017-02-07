@@ -1,1 +1,1 @@
-A mod that adds an air bubbles under water. There is also an API to register new generators of air bubbles.
+You can craft and use better campfire.
