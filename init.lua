@@ -1,3 +1,7 @@
+-- Load support for intllib.
+    local MP = minetest.get_modpath(minetest.get_current_modname())
+    local S, NS = dofile(MP.."/intllib.lua")
+
 -- VARIABLES
 new_campfire = {}
 local id = {}
@@ -20,7 +24,7 @@ local function fire_particles_on(pos) -- 3 layers of fire
 			 maxsize = 4,
 			 collisiondetection = false,
 			 vertical = true,
-			 texture = "fire.png",
+			 texture = "cfire.png",
 	--	      playername = "singleplayer"
 			})
 --      print(id)
@@ -41,7 +45,7 @@ local function fire_particles_on(pos) -- 3 layers of fire
 			 maxsize = 0.7,
 			 collisiondetection = false,
 			 vertical = true,
-			 texture = "fire.png",
+			 texture = "cfire.png",
 	--	      playername = "singleplayer" -- показывать только определенному игроку.
 			})
 --      print(id)
@@ -82,7 +86,7 @@ end
 -- NODES
 
 minetest.register_node('new_campfire:campfire', {
-	description = 'Campfire',
+	description = S("Campfire"),
 	drawtype = 'mesh',
 	mesh = 'contained_campfire.obj',
 	tiles = {
@@ -102,7 +106,7 @@ minetest.register_node('new_campfire:campfire', {
 
 	on_construct = function(pos)
 		local meta = minetest.env:get_meta(pos)
-		meta:set_string('infotext', 'Campfire');
+		meta:set_string('infotext', S("Campfire"));
 	end,
 
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
@@ -131,7 +135,7 @@ minetest.register_node('new_campfire:campfire', {
 })
 
 minetest.register_node('new_campfire:campfire_active', {
-	description = 'Active campfire',
+	description = S("Active campfire"),
 	drawtype = 'mesh',
 	mesh = 'contained_campfire.obj',
 	tiles = {
@@ -154,7 +158,7 @@ minetest.register_node('new_campfire:campfire_active', {
 
     on_construct = function(pos)
   		local meta = minetest.env:get_meta(pos)
-      meta:set_string('infotext', 'Active campfire');
+      meta:set_string('infotext', S("Active campfire"));
       minetest.get_node_timer(pos):start(2)
   	end,
 

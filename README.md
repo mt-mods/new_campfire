@@ -1,6 +1,6 @@
 Minetest mod "New Campfire"
 ======================
-Version: 0.1.0
+Version: 0.1.1
 
 # License of source code:
 - Copyright (C) 2017 Pavel Litvinoff <googolgl@gmail.com>
@@ -29,10 +29,16 @@ group:stone  group:stick  group:stone
 #### [0.1.0] - 2017-02-07
 - Release
 
+#### [0.1.1] - 2017-02-08
+- add initllib support
+- improved texture fire
 
 # Links:
 - Forum Topic:
-- <https://forum.minetest.net/>
+- <https://forum.minetest.net/viewtopic.php?f=9&t=16611>
 
 - Bitbucket:
 - <https://bitbucket.org/g00g01/new_campfire>
+
+- Intllib:
+- https://github.com/minetest-mods/intllib
