@@ -1,6 +1,6 @@
 Minetest mod "New Campfire"
 ======================
-Version: 0.1.1
+Version: 0.2.0
 
 # License of source code:
 - Copyright (C) 2017 Pavel Litvinoff <googolgl@gmail.com>
@@ -11,7 +11,7 @@ Version: 0.1.1
 - License of media (models): CC BY-SA
 
 # Notice:
-- This mod is only useable with Minetest 0.4.14 or above!
+- This mod is only useable with Minetest 0.4.15-dev or above!
 
 # Description:
 - You can craft and use better campfire.
@@ -19,8 +19,8 @@ Version: 0.1.1
 # Using the mod:
 - To use the campfire, you have to craft one. You need 2 stick and 3 stone to craft it following way:
 ```
-             group:stick
-group:stone  group:stick  group:stone
+             default:stick
+group:stone  default:stick  group:stone
              group:stone
 ```
 - Just rightclick with a flint_and_steel in your hand on the campfire and it will flame.
@@ -30,8 +30,11 @@ group:stone  group:stick  group:stone
 - Release
 
 #### [0.1.1] - 2017-02-08
-- add initllib support
+- added initllib support
 - improved texture fire
+
+#### [0.2.0] - 2017-02-13
+- added animation particles of fire and smoke
 
 # Links:
 - Forum Topic:

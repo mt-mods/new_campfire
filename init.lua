@@ -1,36 +1,35 @@
+-- VARIABLES
+new_campfire = {}
+
 -- Load support for intllib.
     local MP = minetest.get_modpath(minetest.get_current_modname())
     local S, NS = dofile(MP.."/intllib.lua")
 
--- VARIABLES
-new_campfire = {}
-local id = {}
-
 -- FUNCTIONS
 local function fire_particles_on(pos) -- 3 layers of fire
       local meta = minetest.get_meta(pos)
-       id = minetest.add_particlespawner({ -- 1 layer big particles fire
-			 amount = 33,
+      local id = minetest.add_particlespawner({ -- 1 layer big particles fire
+			 amount = 26,
 			 time = 3,
 			 minpos = {x = pos.x - 0.2, y = pos.y - 0.4, z = pos.z - 0.2},
-			 maxpos = {x = pos.x + 0.2, y = pos.y, z = pos.z + 0.2},
+			 maxpos = {x = pos.x + 0.2, y = pos.y - 0.1, z = pos.z + 0.2},
 			 minvel = {x= 0, y= 0, z= 0},
 			 maxvel = {x= 0, y= 0.1, z= 0},
 			 minacc = {x= 0, y= 0, z= 0},
-			 maxacc = {x= 0, y= 1, z= 0},
+			 maxacc = {x= 0, y= 0.5, z= 0},
 			 minexptime = 0.3,
-			 maxexptime = 0.3,
+			 maxexptime = 0.6,
 			 minsize = 2,
-			 maxsize = 4,
+			 maxsize = 5,
 			 collisiondetection = false,
 			 vertical = true,
-			 texture = "cfire.png",
+			 texture = "anim_cfire.png",
+       animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.7,},
 	--	      playername = "singleplayer"
 			})
---      print(id)
       meta:set_int("layer_1", id)
 
-       id = minetest.add_particlespawner({ -- 2 layer smol particles fire
+      local id = minetest.add_particlespawner({ -- 2 layer smol particles fire
 			 amount = 3,
 			 time = 3,
 			 minpos = {x = pos.x - 0.1, y = pos.y, z = pos.z - 0.1},
@@ -40,22 +39,22 @@ local function fire_particles_on(pos) -- 3 layers of fire
  			 minacc = {x= 0, y= 0, z= 0},
 			 maxacc = {x= 0, y= 1, z= 0},
 			 minexptime = 0.3,
-			 maxexptime = 0.3,
-			 minsize = 0.3,
+			 maxexptime = 0.5,
+			 minsize = 0.5,
 			 maxsize = 0.7,
 			 collisiondetection = false,
 			 vertical = true,
-			 texture = "cfire.png",
+			 texture = "anim_cfire.png",
+       animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.6,},
 	--	      playername = "singleplayer" -- показывать только определенному игроку.
 			})
---      print(id)
       meta:set_int("layer_2", id)
 
-       id = minetest.add_particlespawner({ --3 layer smoke
+      local id = minetest.add_particlespawner({ --3 layer smoke
 			 amount = 6,
 			 time = 3,
 			 minpos = {x = pos.x - 0.1, y = pos.y - 0.2, z = pos.z - 0.1},
-			 maxpos = {x = pos.x + 0.1, y = pos.y + 0.4, z = pos.z + 0.1},
+			 maxpos = {x = pos.x + 0.2, y = pos.y + 0.4, z = pos.z + 0.2},
 			 minvel = {x= 0, y= 0, z= 0},
 			 maxvel = {x= 0, y= 0.1, z= 0},
 			 minacc = {x= 0, y= 0, z= 0},
@@ -66,10 +65,10 @@ local function fire_particles_on(pos) -- 3 layers of fire
 			 maxsize = 4,
 			 collisiondetection = true,
 			 vertical = true,
-			 texture = "smoke.png",
+			 texture = "anim_smoke.png",
+       animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.7,},
 			--	      playername = "singleplayer"
 			})
---      print(id)
       meta:set_int("layer_3", id)
 end
 
@@ -124,13 +123,11 @@ minetest.register_node('new_campfire:campfire', {
 	      size = 4,
         collisiondetection = true,
         vertical = true,
-        texture = "smoke.png",
+        texture = "anim_smoke.png",
+        animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 2.5,},
 --        playername = "singleplayer"
       })
 		end
-	end,
-
-	after_dig_node = function(pos, oldnode, oldmetadata, digger)
 	end,
 })
 
@@ -173,7 +170,6 @@ minetest.register_node('new_campfire:campfire_active', {
       local meta = minetest.get_meta(pos)
         local handle = minetest.sound_play("fire_small",{pos=pos, max_hear_distance = 18, loop=false, gain=0.1})
         meta:set_int("handle", handle)
---        print (handle)
         minetest.get_node_timer(pos):start(6)
     end,
 })
@@ -205,7 +201,7 @@ minetest.register_abm({
 minetest.register_craft({
 	output = "new_campfire:campfire",
 	recipe = {
-    {'', 'group:stick', ''},
+    {'', 'default:stick', ''},
     {'group:stone','default:stick', 'group:stone'},
     {'', 'group:stone', ''},
   }
