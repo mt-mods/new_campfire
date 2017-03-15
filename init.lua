@@ -6,7 +6,6 @@ new_campfire = {}
     local S, NS = dofile(MP.."/intllib.lua")
     dofile(MP.."/config.lua")
 
-
 -- FUNCTIONS
 local function fire_particles_on(pos) -- 3 layers of fire
     local meta = minetest.get_meta(pos)
@@ -85,6 +84,22 @@ local function fire_particles_off(pos)
   minetest.delete_particlespawner(id_3)
 end
 
+local function indicator(maxVal, curVal)
+    local percent_val = math.floor(curVal / maxVal * 100)
+    local progress = ""
+    local v = percent_val / 10
+    for k=1,10 do
+        if v > 0 then
+            progress = progress.."▓"
+        else
+            progress = progress.."▒"
+        end
+        v = v - 1
+    end
+--    print(progress.." "..percent_val.."%")
+    return "\n"..progress.." "..percent_val.."%"
+end
+
 -- NODES
 
 minetest.register_node('new_campfire:campfire', {
@@ -154,14 +169,34 @@ minetest.register_node('new_campfire:campfire_active', {
 
     on_rightclick = function(pos, node, player, itemstack, pointed_thing)
       if itemstack:get_name() == "default:stick" then
-          print("=================")
-          print(campfire_limit)
+          local meta = minetest.get_meta(pos)
+          local it_val = meta:get_int("it_val") + (new_campfire_stick_time);
+          meta:set_int('it_val', it_val);
+          local id = minetest.add_particle({
+ 	           pos = {x = pos.x, y = pos.y+0.5, z = pos.z},
+ 	           velocity = {x=0, y=-1, z=0},
+ 	           acceleration = {x=0, y=0, z=0},
+ 	           expirationtime = 1,
+ 	           size = 4,
+                collisiondetection = true,
+                vertical = true,
+                texture = "default_stick.png",
+         })
+         if not minetest.setting_getbool("creative_mode") then
+            itemstack:take_item()
+			return itemstack
+         end
       end
 	end,
 
     on_construct = function(pos)
   		local meta = minetest.env:get_meta(pos)
-        meta:set_string('infotext', S("Active campfire").."\n▓▓▓▓▓▓▓▒▒▒ 70% ");
+        if new_campfire_limit == 1 and new_campfire_ttl > 0 then
+            meta:set_int('it_val', new_campfire_ttl);
+            meta:set_string('infotext', S("Active campfire")..indicator(1, 1));
+        else
+            meta:set_string('infotext', S("Active campfire"));
+        end
         minetest.get_node_timer(pos):start(2)
   	end,
 
@@ -197,8 +232,16 @@ minetest.register_abm({
       minetest.set_node(pos, {name = 'new_campfire:campfire'})
       minetest.sound_play("fire_extinguish_flame",{pos = pos, max_hear_distance = 16, gain = 0.15})
     else
-      local meta = minetest.get_meta(pos)
---      local id_1 = meta:get_int("layer_1")
+      if new_campfire_limit == 1 and new_campfire_ttl > 0 then
+          local meta = minetest.get_meta(pos)
+          local it_val = meta:get_int("it_val") - 3;
+          if it_val <= 0 then
+              minetest.remove_node(pos)
+              return
+          end
+          meta:set_int('it_val', it_val);
+          meta:set_string('infotext', S("Active campfire")..indicator(new_campfire_ttl, it_val));
+      end
       fire_particles_on(pos)
     end
   end
@@ -208,8 +251,8 @@ minetest.register_abm({
 minetest.register_craft({
 	output = "new_campfire:campfire",
 	recipe = {
-    {'', 'default:stick', ''},
-    {'group:stone','default:stick', 'group:stone'},
-    {'', 'group:stone', ''},
-  }
+        {'', 'default:stick', ''},
+        {'group:stone','default:stick', 'group:stone'},
+        {'', 'group:stone', ''},
+    }
 })

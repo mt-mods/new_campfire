@@ -1,6 +1,6 @@
 Minetest mod "New Campfire"
 ======================
-Version: 0.2.0
+Version: 0.2.3
 
 # License of source code:
 - Copyright (C) 2017 Pavel Litvinoff <googolgl@gmail.com>
@@ -35,6 +35,10 @@ group:stone  default:stick  group:stone
 
 #### [0.2.0] - 2017-02-13
 - added animation particles of fire and smoke
+
+#### [0.2.3] - 2017-03-15
+- added: sound file, new textures, changed model, config_file
+- added campfire life time
 
 # Links:
 - Forum Topic:
