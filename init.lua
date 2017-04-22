@@ -1,5 +1,6 @@
 -- VARIABLES
-new_campfire_limit = 1;         -- Values: 0 - unlimit campfire, 1 - limit
+new_campfire_cooking = 1;       -- nil - can`t cooked, 1 - can cooked
+new_campfire_limit = 1;         -- nil - unlimited campfire, 1 - limited
 new_campfire_ttl = 30;          -- Time in sec
 new_campfire_stick_time = new_campfire_ttl/2;   -- How long does the stick increase. In sec.
 
@@ -13,50 +14,50 @@ new_campfire = {}
 local function fire_particles_on(pos) -- 3 layers of fire
     local meta = minetest.get_meta(pos)
     local id = minetest.add_particlespawner({ -- 1 layer big particles fire
-        amount = 26,
-        time = 3.3,
+        amount = 9,
+        time = 1.3,
         minpos = {x = pos.x - 0.2, y = pos.y - 0.4, z = pos.z - 0.2},
         maxpos = {x = pos.x + 0.2, y = pos.y - 0.1, z = pos.z + 0.2},
         minvel = {x= 0, y= 0, z= 0},
         maxvel = {x= 0, y= 0.1, z= 0},
         minacc = {x= 0, y= 0, z= 0},
-        maxacc = {x= 0, y= 0.5, z= 0},
-        minexptime = 0.3,
-        maxexptime = 0.6,
+        maxacc = {x= 0, y= 0.7, z= 0},
+        minexptime = 0.5,
+        maxexptime = 0.7,
         minsize = 2,
         maxsize = 5,
         collisiondetection = false,
         vertical = true,
         texture = "new_campfire_anim_fire.png",
-        animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.7,},
+        animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.8,},
 --      playername = "singleplayer"
     })
     meta:set_int("layer_1", id)
 
     local id = minetest.add_particlespawner({ -- 2 layer smol particles fire
-        amount = 3,
-        time = 3.3,
+        amount = 1,
+        time = 1.3,
         minpos = {x = pos.x - 0.1, y = pos.y, z = pos.z - 0.1},
         maxpos = {x = pos.x + 0.1, y = pos.y + 0.4, z = pos.z + 0.1},
         minvel = {x= 0, y= 0, z= 0},
         maxvel = {x= 0, y= 0.1, z= 0},
         minacc = {x= 0, y= 0, z= 0},
         maxacc = {x= 0, y= 1, z= 0},
-        minexptime = 0.3,
-        maxexptime = 0.5,
+        minexptime = 0.4,
+        maxexptime = 0.6,
         minsize = 0.5,
         maxsize = 0.7,
         collisiondetection = false,
         vertical = true,
         texture = "new_campfire_anim_fire.png",
-        animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.6,},
+        animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.7,},
      -- playername = "singleplayer"
     })
     meta:set_int("layer_2", id)
 
     local id = minetest.add_particlespawner({ --3 layer smoke
-        amount = 6,
-        time = 3.3,
+        amount = 1,
+        time = 1.3,
         minpos = {x = pos.x - 0.1, y = pos.y - 0.2, z = pos.z - 0.1},
         maxpos = {x = pos.x + 0.2, y = pos.y + 0.4, z = pos.z + 0.2},
         minvel = {x= 0, y= 0, z= 0},
@@ -64,13 +65,13 @@ local function fire_particles_on(pos) -- 3 layers of fire
         minacc = {x= 0, y= 0, z= 0},
         maxacc = {x= 0, y= 1, z= 0},
         minexptime = 0.6,
-        maxexptime = 0.6,
+        maxexptime = 0.8,
         minsize = 1,
         maxsize = 4,
         collisiondetection = true,
         vertical = true,
         texture = "new_campfire_anim_smoke.png",
-        animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.7,},
+        animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 0.9,},
         -- playername = "singleplayer"
     })
     meta:set_int("layer_3", id)
@@ -101,17 +102,92 @@ local function indicator(maxVal, curVal)
     return "\n"..progress.." "..percent_val.."%"
 end
 
-local function effect(pos, texture)
+local function effect(pos, texture, vlc, acc, time, size)
     local id = minetest.add_particle({
-        pos = {x = pos.x, y = pos.y+0.5, z = pos.z},
-        velocity = {x=0, y=-1, z=0},
-        acceleration = {x=0, y=0, z=0},
-        expirationtime = 1,
-        size = 6,
+        pos = pos,
+        velocity = vlc,
+        acceleration = acc,
+        expirationtime = time,
+        size = size,
         collisiondetection = true,
         vertical = true,
         texture = texture,
     })
+end
+
+local function infotext_edit(meta)
+    local infotext = S("Active campfire")
+
+    if new_campfire_limit and new_campfire_ttl > 0 then
+        local it_val = meta:get_int("it_val");
+        infotext = infotext..indicator(new_campfire_ttl, it_val)
+    end
+
+    local cooked_time = meta:get_int('cooked_time');
+    if new_campfire_cooking and cooked_time ~= 0 then
+        local cooked_cur_time = meta:get_int('cooked_cur_time');
+        infotext = infotext.."\n"..S("Cooking")..indicator(cooked_time, cooked_cur_time)
+    end
+
+    meta:set_string('infotext', infotext)
+end
+
+local function cooking(pos, itemstack)
+    local meta = minetest.get_meta(pos)
+    local cooked, _ = minetest.get_craft_result({method = "cooking", width = 1, items = {itemstack}})
+    local cookable = cooked.time ~= 0
+
+    if cookable and new_campfire_cooking then
+        local eat_y = ItemStack(cooked.item:to_table().name):get_definition().on_use
+        if string.find(minetest.serialize(eat_y), "do_item_eat") and meta:get_int("cooked_time") == 0 then
+            meta:set_int('cooked_time', cooked.time);
+            meta:set_int('cooked_cur_time', 0);
+            local name = itemstack:to_table().name
+            local texture = itemstack:get_definition().inventory_image
+
+            infotext_edit(meta)
+
+            effect(
+                {x = pos.x, y = pos.y+0.4, z = pos.z},
+                texture,
+                {x=0, y=-1/cooked.time, z=0},
+                {x=0, y=0, z=0},
+                cooked.time/2,
+                4
+            )
+
+            minetest.after(cooked.time/2, function()
+                if meta:get_int("it_val") > 0 then
+                    effect(
+                        {x = pos.x, y = pos.y-0.1, z = pos.z},
+                        texture,
+                        {x=0, y=1/cooked.time, z=0},
+                        {x=0, y=0, z=0},
+                        cooked.time/2,
+                        4
+                    )
+
+                    local item = cooked.item:to_table().name
+                    minetest.after(cooked.time/2, function(item)
+                        if meta:get_int("it_val") > 0 then
+                            minetest.add_item({x=pos.x, y=pos.y+0.5, z=pos.z}, item)
+                            meta:set_int('cooked_time', 0);
+                            meta:set_int('cooked_cur_time', 0);
+                        else
+                            minetest.add_item({x=pos.x, y=pos.y+0.5, z=pos.z}, name)
+                        end
+                    end, item)
+                else
+                    minetest.add_item({x=pos.x, y=pos.y+0.5, z=pos.z}, name)
+                end
+            end)
+
+            if not minetest.setting_getbool("creative_mode") then
+                itemstack:take_item()
+                return itemstack
+            end
+        end
+    end
 end
 
 -- NODES
@@ -130,7 +206,7 @@ minetest.register_node('new_campfire:fireplace', {
         fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
     },
     sounds = default.node_sound_stone_defaults(),
-    drop = {max_items = 3, items = {{items = {"stairs:slab_cobble","stairs:slab_cobble","stairs:slab_cobble"}}}},
+    drop = {max_items = 3, items = {{items = {"stairs:slab_cobble 3"}}}},
 
     on_construct = function(pos)
         local meta = minetest.get_meta(pos)
@@ -205,26 +281,19 @@ minetest.register_node('new_campfire:campfire_active', {
 
     on_rightclick = function(pos, node, player, itemstack, pointed_thing)
         local meta = minetest.get_meta(pos)
-
-    --    local cooked, _ = minetest.get_craft_result({method = "cooking", width = 1, items = {itemstack}})
-    --    local cookable = cooked.time ~= 0
-
---        if cookable then
---            local eat_y = ItemStack(cooked.item:to_table().name):get_definition().on_use
---            print(string.find(minetest.serialize(eat_y), "do_item_eat"))
---            if string.find(minetest.serialize(eat_y), "do_item_eat") then
---                minetest.add_item({x=pos.x, y=pos.y+0.5, z=pos.z}, itemstack:get_name())
-    --            print(dump(itemstack:get_definition()))
-    --            effect(pos, itemstack:get_definition().inventory_image)
---                itemstack:take_item()
---                return itemstack
---            end
---        end
-
+        cooking(pos, itemstack)
          if itemstack:get_definition().groups.stick == 1 then
             local it_val = meta:get_int("it_val") + (new_campfire_ttl);
             meta:set_int('it_val', it_val);
-            effect(pos, "default_stick.png")
+            effect(
+                {x = pos.x, y = pos.y+0.4, z = pos.z},
+                "default_stick.png",
+                {x=0, y=-1, z=0},
+                {x=0, y=0, z=0},
+                1,
+                6
+            )
+            infotext_edit(meta)
             if not minetest.setting_getbool("creative_mode") then
                 itemstack:take_item()
                 return itemstack
@@ -234,12 +303,8 @@ minetest.register_node('new_campfire:campfire_active', {
 
     on_construct = function(pos)
         local meta = minetest.get_meta(pos)
-        if new_campfire_limit == 1 and new_campfire_ttl > 0 then
-            meta:set_int('it_val', new_campfire_ttl);
-            meta:set_string('infotext', S("Active campfire")..indicator(1, 1));
-        else
-            meta:set_string('infotext', S("Active campfire"));
-        end
+        meta:set_int('it_val', new_campfire_ttl);
+        infotext_edit(meta)
         minetest.get_node_timer(pos):start(2)
     end,
 
@@ -262,7 +327,7 @@ minetest.register_node('new_campfire:campfire_active', {
 minetest.register_abm({
     nodenames = {"new_campfire:campfire_active"},
 --    neighbors = {"group:puts_out_fire"},
-    interval = 3.0, -- Run every 3 seconds
+    interval = 1.0, -- Run every 3 seconds
     chance = 1, -- Select every 1 in 1 nodes
     catch_up = false,
 
@@ -276,9 +341,10 @@ minetest.register_abm({
             minetest.set_node(pos, {name = 'new_campfire:campfire'})
             minetest.sound_play("fire_extinguish_flame",{pos = pos, max_hear_distance = 16, gain = 0.15})
         else
-            if new_campfire_limit == 1 and new_campfire_ttl > 0 then
-                local meta = minetest.get_meta(pos)
-                local it_val = meta:get_int("it_val") - 3;
+            local meta = minetest.get_meta(pos)
+            local it_val = meta:get_int("it_val") - 1;
+
+            if new_campfire_limit and new_campfire_ttl > 0 then
                 if it_val <= 0 then
                     minetest.remove_node(pos)
                     minetest.set_node(pos, {name = 'new_campfire:fireplace'})
@@ -286,8 +352,18 @@ minetest.register_abm({
                     return
                 end
                 meta:set_int('it_val', it_val);
-                meta:set_string('infotext', S("Active campfire")..indicator(new_campfire_ttl, it_val));
             end
+
+            if new_campfire_cooking then
+                if meta:get_int('cooked_cur_time') < meta:get_int('cooked_time') then
+                    meta:set_int('cooked_cur_time', meta:get_int('cooked_cur_time') + 1);
+                else
+                    meta:set_int('cooked_time', 0);
+                    meta:set_int('cooked_cur_time', 0);
+                end
+            end
+
+            infotext_edit(meta)
             fire_particles_on(pos)
         end
     end

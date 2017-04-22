@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2017-02-08 16:06+0200\n"
+"POT-Creation-Date: 2017-04-22 20:24+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,10 +17,22 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: init.lua:89 init.lua:109
+#: init.lua:119 init.lua:260
+msgid "Active campfire"
+msgstr ""
+
+#: init.lua:129
+msgid "Cooking"
+msgstr ""
+
+#: init.lua:193 init.lua:211
+msgid "Fireplace"
+msgstr ""
+
+#: init.lua:216 init.lua:236
 msgid "Campfire"
 msgstr ""
 
-#: init.lua:138 init.lua:161
-msgid "Active campfire"
+#: init.lua:382
+msgid "Ash"
 msgstr ""

@@ -1,6 +1,6 @@
 Minetest mod "New Campfire"
 ======================
-Version: 0.2.4
+Version: 0.3.0
 
 # License of source code:
 - Copyright (C) 2017 Pavel Litvinoff <googolgl@gmail.com>
@@ -40,10 +40,15 @@ stairs:slab_cobble      default:stick     stairs:slab_cobble
 - added: sound file, new textures, changed model, config_file
 - added campfire life time
 
-#### [0.2.4] - 2017-03-15
+#### [0.2.4] - 2017-04-20
 - added: fireplace, ash
-- Now if there is something near the campfire. It may catch fire.
+- flamable nodes around the campfire can fire
 - removed config_file
+- changed recipe
+
+#### [0.3.0] - 2017-
+- added: cooking
+
 
 # Links:
 - Forum Topic:
