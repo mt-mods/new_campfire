@@ -23,7 +23,7 @@ msgstr "Палаюче багаття"
 
 #: init.lua:129
 msgid "Cooking"
-msgstr "Готування їжи"
+msgstr "Готування"
 
 #: init.lua:193 init.lua:211
 msgid "Fireplace"

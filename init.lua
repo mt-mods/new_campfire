@@ -1,5 +1,5 @@
 -- VARIABLES
-new_campfire_cooking = 1;       -- nil - can`t cooked, 1 - can cooked
+new_campfire_cooking = 1;       -- nil - not cooked, 1 - cooked
 new_campfire_limit = 1;         -- nil - unlimited campfire, 1 - limited
 new_campfire_ttl = 30;          -- Time in sec
 new_campfire_stick_time = new_campfire_ttl/2;   -- How long does the stick increase. In sec.
@@ -66,7 +66,7 @@ local function fire_particles_on(pos) -- 3 layers of fire
         maxacc = {x= 0, y= 1, z= 0},
         minexptime = 0.6,
         maxexptime = 0.8,
-        minsize = 1,
+        minsize = 2,
         maxsize = 4,
         collisiondetection = true,
         vertical = true,
@@ -355,7 +355,7 @@ minetest.register_abm({
             end
 
             if new_campfire_cooking then
-                if meta:get_int('cooked_cur_time') < meta:get_int('cooked_time') then
+                if meta:get_int('cooked_cur_time') <= meta:get_int('cooked_time') then
                     meta:set_int('cooked_cur_time', meta:get_int('cooked_cur_time') + 1);
                 else
                     meta:set_int('cooked_time', 0);

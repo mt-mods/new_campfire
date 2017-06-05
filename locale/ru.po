@@ -23,7 +23,7 @@ msgstr "Горящий костер"
 
 #: init.lua:129
 msgid "Cooking"
-msgstr "Приготовление еды"
+msgstr "Приготовление"
 
 #: init.lua:193 init.lua:211
 msgid "Fireplace"
