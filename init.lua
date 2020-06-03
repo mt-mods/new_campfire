@@ -194,8 +194,147 @@ end
 minetest.register_node('new_campfire:fireplace', {
 	description = S("Fireplace"),
 	drawtype = 'mesh',
-	mesh = 'contained_campfire_empty.obj',
-	tiles = {name='[combine:16x16:0,0=new_campfire_cobble.png'},
+	mesh = 'contained_campfire.obj',
+	tiles = {
+		"default_stone.png",
+		"new_campfire_empty_tile.png",
+		"new_campfire_empty_tile.png"
+	},
+	walkable = false,
+	buildable_to = false,
+	sunlight_propagates = false,
+	paramtype = 'light',
+	groups = {dig_immediate=3, flammable=0, not_in_creative_inventory=1},
+	selection_box = {
+		type = 'fixed',
+		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
+	},
+	sounds = default.node_sound_stone_defaults(),
+	drop = {max_items = 3, items = {{items = {"stairs:slab_cobble 3"}}}},
+
+	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
+		local name = itemstack:get_name()
+		if name == "new_campfire:grille" then
+			itemstack:take_item()
+			minetest.swap_node(pos, {name = "new_campfire:fireplace_with_grille"})
+		end
+	end,
+
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_string('infotext', S("Fireplace"));
+	end,
+})
+
+minetest.register_node('new_campfire:campfire', {
+	description = S("Campfire"),
+	drawtype = 'mesh',
+	mesh = 'contained_campfire.obj',
+	tiles = {
+		"default_stone.png",
+		"default_wood.png",
+		"new_campfire_empty_tile.png"
+	},
+	inventory_image = "new_campfire_campfire.png",
+--    wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
+--	wield_image = "new_campfire_campfire.png",
+	walkable = false,
+	buildable_to = false,
+	sunlight_propagates = true,
+	groups = {dig_immediate=3, flammable=0},
+	paramtype = 'light',
+	selection_box = {
+		type = 'fixed',
+		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
+	},
+	sounds = default.node_sound_stone_defaults(),
+
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_string('infotext', S("Campfire"));
+	end,
+
+	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
+		local itemname = itemstack:get_name()
+		if itemname == "fire:flint_and_steel" then
+			minetest.sound_play("fire_flint_and_steel",{pos = pos, gain = 0.5, max_hear_distance = 8})
+			minetest.set_node(pos, {name = 'new_campfire:campfire_active'})
+			local id = minetest.add_particle({
+				pos = {x = pos.x, y = pos.y, z = pos.z},
+				velocity = {x=0, y=0.1, z=0},
+				acceleration = {x=0, y=0, z=0},
+				expirationtime = 2,
+				size = 4,
+				collisiondetection = true,
+				vertical = true,
+				texture = "new_campfire_anim_smoke.png",
+				animation = {type="vertical_frames", aspect_w=16, aspect_h=16, length = 2.5,},
+--               playername = "singleplayer"
+			})
+		elseif itemname == "new_campfire:grille" then
+			itemstack:take_item()
+			minetest.swap_node(pos, {name = "new_campfire:campfire_with_grille"})
+		end
+	end,
+})
+
+minetest.register_node('new_campfire:campfire_active', {
+	description = S("Active campfire"),
+	drawtype = 'mesh',
+	mesh = 'contained_campfire.obj',
+	tiles = {
+		"default_stone.png",
+		"default_wood.png",
+		"new_campfire_empty_tile.png"
+	},
+	inventory_image = "new_campfire_campfire.png",
+--	wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
+	walkable = false,
+	buildable_to = false,
+	sunlight_propagates = true,
+	groups = {oddly_breakable_by_hand=3, flammable=0, not_in_creative_inventory=1, igniter=1},
+	paramtype = 'none',
+	light_source = 13,
+	damage_per_second = 3,
+	drop = "new_campfire:campfire",
+	sounds = default.node_sound_stone_defaults(),
+	selection_box = {
+		type = 'fixed',
+		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
+	},
+
+	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
+		local name = itemstack:get_name()
+		if name == "new_campfire:grille" then
+			itemstack:take_item()
+			minetest.swap_node(pos, {name = "new_campfire:campfire_active_with_grille"})
+		end
+	end,
+
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_int('it_val', new_campfire_ttl);
+		infotext_edit(meta)
+		minetest.get_node_timer(pos):start(2)
+	end,
+
+	on_destruct = function(pos, oldnode, oldmetadata, digger)
+		fire_particles_off(pos)
+		local meta = minetest.get_meta(pos)
+		local handle = meta:get_int("handle")
+		minetest.sound_stop(handle)
+	end,
+})
+
+minetest.register_node('new_campfire:fireplace_with_grille', {
+	description = S("Fireplace with grille"),
+	drawtype = 'mesh',
+	mesh = 'contained_campfire.obj',
+	tiles = {
+		"default_stone.png",
+		"new_campfire_empty_tile.png",
+		"default_steel_block.png"
+	},
 	walkable = false,
 	buildable_to = false,
 	sunlight_propagates = false,
@@ -214,18 +353,22 @@ minetest.register_node('new_campfire:fireplace', {
 	end,
 })
 
-minetest.register_node('new_campfire:campfire', {
-	description = S("Campfire"),
+minetest.register_node('new_campfire:campfire_with_grille', {
+	description = S("Campfire with grille"),
 	drawtype = 'mesh',
 	mesh = 'contained_campfire.obj',
-	tiles = {name='[combine:16x16:0,0=default_cobble.png:0,8=default_wood.png'},
+	tiles = {
+		"default_stone.png",
+		"default_wood.png",
+		"default_steel_block.png"
+	},
 	inventory_image = "new_campfire_campfire.png",
 --    wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
-	wield_image = "new_campfire_campfire.png",
+--	wield_image = "new_campfire_campfire.png",
 	walkable = false,
 	buildable_to = false,
 	sunlight_propagates = true,
-	groups = {dig_immediate=3, flammable=0},
+	groups = {dig_immediate=3, flammable=0, not_in_creative_inventory=1},
 	paramtype = 'light',
 	selection_box = {
 		type = 'fixed',
@@ -241,7 +384,7 @@ minetest.register_node('new_campfire:campfire', {
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		if itemstack:get_name() == "fire:flint_and_steel" then
 			minetest.sound_play("fire_flint_and_steel",{pos = pos, gain = 0.5, max_hear_distance = 8})
-			minetest.set_node(pos, {name = 'new_campfire:campfire_active'})
+			minetest.set_node(pos, {name = 'new_campfire:campfire_active_with_grille'})
 			local id = minetest.add_particle({
 				pos = {x = pos.x, y = pos.y, z = pos.z},
 				velocity = {x=0, y=0.1, z=0},
@@ -258,14 +401,18 @@ minetest.register_node('new_campfire:campfire', {
 	end,
 })
 
-minetest.register_node('new_campfire:campfire_active', {
-	description = S("Active campfire"),
+minetest.register_node('new_campfire:campfire_active_with_grille', {
+	description = S("Active campfire with grille"),
 	drawtype = 'mesh',
 	mesh = 'contained_campfire.obj',
-	tiles = {name='[combine:16x16:0,0=new_campfire_cobble.png:0,8=new_campfire_wood.png'},
+	tiles = {
+		"default_stone.png",
+		"default_wood.png",
+		"default_steel_block.png"
+	},
 	inventory_image = "new_campfire_campfire.png",
-	wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
-	walkable = false,
+--	wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
+	walkable = false				,
 	buildable_to = false,
 	sunlight_propagates = true,
 	groups = {oddly_breakable_by_hand=3, flammable=0, not_in_creative_inventory=1, igniter=1},
@@ -325,7 +472,7 @@ minetest.register_node('new_campfire:campfire_active', {
 
 -- ABM
 minetest.register_abm({
-	nodenames = {"new_campfire:campfire_active"},
+	nodenames = {"new_campfire:campfire_active", "new_campfire:campfire_active_with_grille"},
 --    neighbors = {"group:puts_out_fire"},
 	interval = 1.0, -- Run every 3 seconds
 	chance = 1, -- Select every 1 in 1 nodes
@@ -338,7 +485,7 @@ minetest.register_abm({
 			{"group:water"}
 		)
 		if #fpos > 0 then
-			minetest.set_node(pos, {name = 'new_campfire:campfire'})
+			minetest.set_node(pos, {name = string.gsub(node.name, "_active", "")})
 			minetest.sound_play("fire_extinguish_flame",{pos = pos, max_hear_distance = 16, gain = 0.15})
 		else
 			local meta = minetest.get_meta(pos)
@@ -347,7 +494,7 @@ minetest.register_abm({
 			if new_campfire_limit and new_campfire_ttl > 0 then
 				if it_val <= 0 then
 					minetest.remove_node(pos)
-					minetest.set_node(pos, {name = 'new_campfire:fireplace'})
+					minetest.set_node(pos, {name = string.gsub(node.name, "campfire_active", "fireplace")} )
 					minetest.add_item(pos, "new_campfire:ash")
 					return
 				end
@@ -370,6 +517,16 @@ minetest.register_abm({
 })
 
 -- CRAFTS
+
+minetest.register_craft({
+    output = "new_campfire:grille",
+	recipe = {
+		{ "basic_materials:steel_bar", "",                           "basic_materials:steel_bar" },
+		{ "",                          "basic_materials:steel_wire", "" },
+		{ "basic_materials:steel_bar", "",                           "basic_materials:steel_bar" },
+	}
+})
+
 minetest.register_craft({
 	output = "new_campfire:campfire",
 	recipe = {
@@ -380,6 +537,12 @@ minetest.register_craft({
 })
 
 -- ITEMS
+
+minetest.register_craftitem("new_campfire:grille", {
+	description = S("Metal Grille"),
+	inventory_image = "new_campfire_grille.png"
+})
+
 minetest.register_craftitem("new_campfire:ash", {
 	description = S("Ash"),
 	inventory_image = "new_campfire_ash.png"
