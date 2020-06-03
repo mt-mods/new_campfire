@@ -249,8 +249,6 @@ minetest.register_node('new_campfire:campfire', {
 		"new_campfire_empty_tile.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
---    wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
---	wield_image = "new_campfire_campfire.png",
 	walkable = false,
 	buildable_to = false,
 	sunlight_propagates = true,
@@ -298,7 +296,6 @@ minetest.register_node('new_campfire:campfire_active', {
 		"new_campfire_empty_tile.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
---	wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
 	walkable = false,
 	buildable_to = false,
 	sunlight_propagates = true,
