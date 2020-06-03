@@ -87,19 +87,21 @@ local function fire_particles_off(pos)
 	minetest.delete_particlespawner(id_3)
 end
 
+-- we do this to determine the number of bytes each block symbol takes in the
+-- user's current encoding (they're 3-byte UTF8 on my box, but that may not be
+-- the case elsewhere)
+
+local utf8_len_1=string.find("▓X", "X")-1
+local utf8_len_2=string.find("▒X", "X")-1
+
 local function indicator(maxVal, curVal)
 	local percent_val = math.floor(curVal / maxVal * 100)
-	local progress = ""
-	local v = percent_val / 10
-	for k=1,10 do
-		if v > 0 then
-			progress = progress.."▓"
-		else
-			progress = progress.."▒"
-		end
-		v = v - 1
-	end
-	return "\n"..progress.." "..percent_val.."%"
+	local v = math.ceil(percent_val / 10)
+
+	return "\n"
+	       ..string.sub("▓▓▓▓▓▓▓▓▓▓", 1, v*utf8_len_1)
+	       ..string.sub("▒▒▒▒▒▒▒▒▒▒", 1, (10-v)*utf8_len_2)
+	       .." "..percent_val.."%"
 end
 
 local function effect(pos, texture, vlc, acc, time, size)
@@ -363,8 +365,6 @@ minetest.register_node('new_campfire:campfire_with_grille', {
 		"default_steel_block.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
---    wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
---	wield_image = "new_campfire_campfire.png",
 	walkable = false,
 	buildable_to = false,
 	sunlight_propagates = true,
@@ -411,7 +411,6 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 		"default_steel_block.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
---	wield_image = "[combine:16x16:0,0=fire_basic_flame.png:0,12=default_cobble.png",
 	walkable = false				,
 	buildable_to = false,
 	sunlight_propagates = true,
