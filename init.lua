@@ -539,3 +539,10 @@ minetest.register_craftitem("new_campfire:ash", {
 	description = S("Ash"),
 	inventory_image = "new_campfire_ash.png"
 })
+
+-- EXTRA
+
+if not minetest.get_modpath("campfire") then
+	minetest.register_alias("campfire:campfire", "new_campfire:campfire")
+	minetest.register_alias("campfire:campfire_active", "new_campfire:campfire")
+end

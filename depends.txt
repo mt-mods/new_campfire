@@ -1,3 +1,4 @@
 default
 fire
 basic_materials
+campfire?
