@@ -144,7 +144,7 @@ local function cooking(pos, itemstack)
 		if string.find(minetest.serialize(eat_y), "do_item_eat") and meta:get_int("cooked_time") == 0 then
 			meta:set_int('cooked_time', cooked.time);
 			meta:set_int('cooked_cur_time', 0);
-			local name = itemstack:to_table().name
+			local name = itemstack:get_name()
 			local texture = itemstack:get_definition().inventory_image
 
 			infotext_edit(meta)
@@ -427,8 +427,8 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
-		cooking(pos, itemstack)
-		 if itemstack:get_definition().groups.stick == 1 then
+
+		if itemstack:get_definition().groups.stick == 1 then
 			local it_val = meta:get_int("it_val") + (new_campfire_ttl);
 			meta:set_int('it_val', it_val);
 			effect(
@@ -444,6 +444,8 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 				itemstack:take_item()
 				return itemstack
 			end
+		else
+			cooking(pos, itemstack)
 		end
 	end,
 
