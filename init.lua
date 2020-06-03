@@ -150,9 +150,9 @@ local function cooking(pos, itemstack)
 			infotext_edit(meta)
 
 			effect(
-				{x = pos.x, y = pos.y+0.4, z = pos.z},
+				{x = pos.x, y = pos.y+0.2, z = pos.z},
 				texture,
-				{x=0, y=-1/cooked.time, z=0},
+				{x=0, y=0, z=0},
 				{x=0, y=0, z=0},
 				cooked.time/2,
 				4
@@ -160,27 +160,19 @@ local function cooking(pos, itemstack)
 
 			minetest.after(cooked.time/2, function()
 				if meta:get_int("it_val") > 0 then
-					effect(
-						{x = pos.x, y = pos.y-0.1, z = pos.z},
-						texture,
-						{x=0, y=1/cooked.time, z=0},
-						{x=0, y=0, z=0},
-						cooked.time/2,
-						4
-					)
 
 					local item = cooked.item:to_table().name
 					minetest.after(cooked.time/2, function(item)
 						if meta:get_int("it_val") > 0 then
-							minetest.add_item({x=pos.x, y=pos.y+0.5, z=pos.z}, item)
+							minetest.add_item({x=pos.x, y=pos.y+0.2, z=pos.z}, item)
 							meta:set_int('cooked_time', 0);
 							meta:set_int('cooked_cur_time', 0);
 						else
-							minetest.add_item({x=pos.x, y=pos.y+0.5, z=pos.z}, name)
+							minetest.add_item({x=pos.x, y=pos.y+0.2, z=pos.z}, name)
 						end
 					end, item)
 				else
-					minetest.add_item({x=pos.x, y=pos.y+0.5, z=pos.z}, name)
+					minetest.add_item({x=pos.x, y=pos.y+0.2, z=pos.z}, name)
 				end
 			end)
 
@@ -193,6 +185,28 @@ local function cooking(pos, itemstack)
 end
 
 -- NODES
+
+local sbox = {
+	type = 'fixed',
+	fixed = { -8/16, -8/16, -8/16, 8/16, -6/16, 8/16},
+}
+
+local grille_sbox = {
+	type = "fixed",
+	fixed = { -8/16, -8/16, -8/16, 8/16, 2/16, 8/16 },
+}
+
+local grille_cbox = {
+	type = "fixed",
+	fixed = {
+		{ -8/16,  1/16, -8/16,  8/16, 2/16,  8/16 },
+		{ -8/16, -8/16, -8/16, -7/16, 1/16, -7/16 },
+		{  8/16, -8/16,  8/16,  7/16, 1/16,  7/16 },
+		{  8/16, -8/16, -8/16,  7/16, 1/16, -7/16 },
+		{ -8/16, -8/16,  8/16, -7/16, 1/16,  7/16 }
+	}
+}
+
 minetest.register_node('new_campfire:fireplace', {
 	description = S("Fireplace"),
 	drawtype = 'mesh',
@@ -207,10 +221,7 @@ minetest.register_node('new_campfire:fireplace', {
 	sunlight_propagates = false,
 	paramtype = 'light',
 	groups = {dig_immediate=3, flammable=0, not_in_creative_inventory=1},
-	selection_box = {
-		type = 'fixed',
-		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
-	},
+	selection_box = sbox,
 	sounds = default.node_sound_stone_defaults(),
 	drop = {max_items = 3, items = {{items = {"stairs:slab_cobble 3"}}}},
 
@@ -245,10 +256,7 @@ minetest.register_node('new_campfire:campfire', {
 	sunlight_propagates = true,
 	groups = {dig_immediate=3, flammable=0},
 	paramtype = 'light',
-	selection_box = {
-		type = 'fixed',
-		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
-	},
+	selection_box = sbox,
 	sounds = default.node_sound_stone_defaults(),
 
 	on_construct = function(pos)
@@ -300,11 +308,7 @@ minetest.register_node('new_campfire:campfire_active', {
 	damage_per_second = 3,
 	drop = "new_campfire:campfire",
 	sounds = default.node_sound_stone_defaults(),
-	selection_box = {
-		type = 'fixed',
-		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
-	},
-
+	selection_box = sbox,
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		local name = itemstack:get_name()
 		if name == "new_campfire:grille" then
@@ -337,15 +341,12 @@ minetest.register_node('new_campfire:fireplace_with_grille', {
 		"new_campfire_empty_tile.png",
 		"default_steel_block.png"
 	},
-	walkable = false,
 	buildable_to = false,
 	sunlight_propagates = false,
 	paramtype = 'light',
 	groups = {dig_immediate=3, flammable=0, not_in_creative_inventory=1},
-	selection_box = {
-		type = 'fixed',
-		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
-	},
+	selection_box = grille_sbox,
+	node_box = grille_cbox,
 	sounds = default.node_sound_stone_defaults(),
 	drop = {max_items = 3, items = {{items = {"stairs:slab_cobble 3"}}}},
 
@@ -365,15 +366,12 @@ minetest.register_node('new_campfire:campfire_with_grille', {
 		"default_steel_block.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
-	walkable = false,
 	buildable_to = false,
 	sunlight_propagates = true,
 	groups = {dig_immediate=3, flammable=0, not_in_creative_inventory=1},
 	paramtype = 'light',
-	selection_box = {
-		type = 'fixed',
-		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
-	},
+	selection_box = grille_sbox,
+	node_box = grille_cbox,
 	sounds = default.node_sound_stone_defaults(),
 
 	on_construct = function(pos)
@@ -411,7 +409,6 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 		"default_steel_block.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
-	walkable = false				,
 	buildable_to = false,
 	sunlight_propagates = true,
 	groups = {oddly_breakable_by_hand=3, flammable=0, not_in_creative_inventory=1, igniter=1},
@@ -420,11 +417,8 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 	damage_per_second = 3,
 	drop = "new_campfire:campfire",
 	sounds = default.node_sound_stone_defaults(),
-	selection_box = {
-		type = 'fixed',
-		fixed = { -0.48, -0.5, -0.48, 0.48, -0.4, 0.48 },
-	},
-
+	selection_box = grille_sbox,
+	node_box = grille_cbox,
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		local meta = minetest.get_meta(pos)
 
