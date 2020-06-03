@@ -191,7 +191,7 @@ local function add_stick(pos, itemstack)
 		local it_val = meta:get_int("it_val") + (new_campfire_ttl);
 		meta:set_int('it_val', it_val);
 		effect(
-			{x = pos.x, y = pos.y+0.4, z = pos.z},
+			pos,
 			"default_stick.png",
 			{x=0, y=-1, z=0},
 			{x=0, y=0, z=0},
