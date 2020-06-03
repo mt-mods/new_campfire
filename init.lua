@@ -96,7 +96,7 @@ local utf8_len_2=string.find("▒X", "X")-1
 
 local function indicator(maxVal, curVal)
 	local percent_val = math.floor(curVal / maxVal * 100)
-	local v = math.ceil(percent_val / 10)
+	local v = math.min(math.ceil(percent_val / 10), 10)
 
 	return "\n"
 	       ..string.sub("▓▓▓▓▓▓▓▓▓▓", 1, v*utf8_len_1)
