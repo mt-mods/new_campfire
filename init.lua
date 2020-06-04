@@ -250,7 +250,10 @@ minetest.register_node('new_campfire:fireplace', {
 
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		local name = itemstack:get_name()
-		if name == "new_campfire:grille" then
+		local a=add_stick(pos, itemstack)
+		if a then
+			minetest.swap_node(pos, {name = "new_campfire:campfire"})
+		elseif name == "new_campfire:grille" then
 			itemstack:take_item()
 			minetest.swap_node(pos, {name = "new_campfire:fireplace_with_grille"})
 		end
@@ -375,7 +378,7 @@ minetest.register_node('new_campfire:fireplace_with_grille', {
 		max_items = 4,
 		items = {
 			{
-				items = {"stairs:slab_cobble 3"}
+				items = {"stairs:slab_cobble 3"},
 				items = {"new_campfire:grille 1"}
 			}
 		}
@@ -383,6 +386,13 @@ minetest.register_node('new_campfire:fireplace_with_grille', {
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string('infotext', S("Fireplace"));
+	end,
+	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
+		local name = itemstack:get_name()
+		local a=add_stick(pos, itemstack)
+		if a then
+			minetest.swap_node(pos, {name = "new_campfire:campfire_with_grille"})
+		end
 	end,
 })
 
