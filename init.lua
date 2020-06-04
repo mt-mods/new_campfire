@@ -1,7 +1,9 @@
 -- VARIABLES
-new_campfire_cooking = 1;       -- nil - not cooked, 1 - cooked
-new_campfire_limit = 1;         -- nil - unlimited campfire, 1 - limited
-new_campfire_ttl = 30;          -- Time in sec
+new_campfire_cooking = 1        -- nil - not cooked, 1 - cooked
+new_campfire_limit = 1          -- nil - unlimited campfire, 1 - limited
+new_campfire_ttl = 30           -- Time in seconds until a fire burns down into embers
+new_campfire_flare_up = 2       -- seconds from adding a stick to embers before it flares into a fire again
+new_campfire_embers_ttl = 60    -- seconds until embers burn out completely leaving ash and an empty fireplace.
 new_campfire_stick_time = new_campfire_ttl/2;   -- How long does the stick increase. In sec.
 
 new_campfire = {}
@@ -207,6 +209,16 @@ local function add_stick(pos, itemstack)
 	end
 end
 
+local function burn_out(pos, node)
+	if string.find(node.name, "embers") then
+		minetest.set_node(pos, {name = string.gsub(node.name, "_with_embers", "")})
+		minetest.add_item(pos, "new_campfire:ash")
+	else
+		fire_particles_off(pos)
+		minetest.set_node(pos, {name = string.gsub(node.name, "campfire_active", "fireplace_with_embers")})
+	end
+end
+
 -- NODES
 
 local sbox = {
@@ -237,6 +249,7 @@ minetest.register_node('new_campfire:fireplace', {
 	tiles = {
 		"default_stone.png",
 		"new_campfire_empty_tile.png",
+		"new_campfire_empty_tile.png",
 		"new_campfire_empty_tile.png"
 	},
 	walkable = false,
@@ -262,6 +275,8 @@ minetest.register_node('new_campfire:fireplace', {
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string('infotext', S("Fireplace"));
+		meta:set_int("it_val", 0)
+		meta:set_int("em_val", 0)
 	end,
 })
 
@@ -272,6 +287,7 @@ minetest.register_node('new_campfire:campfire', {
 	tiles = {
 		"default_stone.png",
 		"default_wood.png",
+		"new_campfire_empty_tile.png",
 		"new_campfire_empty_tile.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
@@ -285,6 +301,8 @@ minetest.register_node('new_campfire:campfire', {
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
+		meta:set_int("it_val", 0)
+		meta:set_int("em_val", 0)
 		meta:set_string('infotext', S("Campfire"));
 	end,
 
@@ -319,6 +337,7 @@ minetest.register_node('new_campfire:campfire_active', {
 	tiles = {
 		"default_stone.png",
 		"default_wood.png",
+		"new_campfire_empty_tile.png",
 		"new_campfire_empty_tile.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
@@ -345,7 +364,8 @@ minetest.register_node('new_campfire:campfire_active', {
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_int('it_val', new_campfire_ttl);
+		meta:set_int('it_val', new_campfire_ttl)
+		meta:set_int("em_val", 0)
 		infotext_edit(meta)
 		minetest.get_node_timer(pos):start(2)
 	end,
@@ -358,6 +378,115 @@ minetest.register_node('new_campfire:campfire_active', {
 	end,
 })
 
+minetest.register_node('new_campfire:fireplace_with_embers', {
+	description = S("Fireplace with embers"),
+	drawtype = 'mesh',
+	mesh = 'contained_campfire.obj',
+	tiles = {
+		"default_stone.png",
+		"new_campfire_empty_tile.png",
+		"new_campfire_empty_tile.png",
+		{
+			name = "new_campfire_anim_embers.png",
+			animation = {
+				type="vertical_frames",
+				aspect_w=16,
+				aspect_h=16,
+				length=2
+			}
+		}
+	},
+	walkable = false,
+	buildable_to = false,
+	sunlight_propagates = false,
+	paramtype = 'light',
+	light_source = 5,
+	groups = {dig_immediate=3, flammable=0, not_in_creative_inventory=1},
+	selection_box = sbox,
+	sounds = default.node_sound_stone_defaults(),
+	drop = {max_items = 3, items = {{items = {"stairs:slab_cobble 3"}}}},
+
+	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
+		local name = itemstack:get_name()
+		local a=add_stick(pos, itemstack)
+		if a then
+			minetest.swap_node(pos, {name = "new_campfire:campfire"})
+			minetest.after(new_campfire_flare_up, function()
+				if minetest.get_meta(pos):get_int("it_val") > 0 then
+					minetest.swap_node(pos, {name="new_campfire:campfire_active"})
+				end
+			end)
+		elseif name == "new_campfire:grille" then
+			itemstack:take_item()
+			minetest.swap_node(pos, {name = "new_campfire:fireplace_with_embers_with_grille"})
+		end
+	end,
+
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_int("it_val", 0)
+		meta:set_int("em_val", new_campfire_embers_ttl)
+		meta:set_string('infotext', S("Fireplace with embers"));
+	end,
+})
+
+minetest.register_node('new_campfire:fireplace_with_embers_with_grille', {
+	description = S("Fireplace with embers and grille"),
+	drawtype = 'mesh',
+	mesh = 'contained_campfire.obj',
+	tiles = {
+		"default_stone.png",
+		"new_campfire_empty_tile.png",
+		"default_steel_block.png",
+		{
+			name = "new_campfire_anim_embers.png",
+			animation = {
+				type="vertical_frames",
+				aspect_w=16,
+				aspect_h=16,
+				length=2
+			}
+		}
+	},
+	walkable = false,
+	buildable_to = false,
+	sunlight_propagates = false,
+	paramtype = 'light',
+	light_source = 5,
+	groups = {dig_immediate=3, flammable=0, not_in_creative_inventory=1},
+	selection_box = grille_sbox,
+	node_box = grille_cbox,
+	sounds = default.node_sound_stone_defaults(),
+	drop = {
+		max_items = 4,
+		items = {
+			{
+				items = {"stairs:slab_cobble 3"},
+				items = {"new_campfire:grille 1"}
+			}
+		}
+	},
+	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
+		local name = itemstack:get_name()
+		local a=add_stick(pos, itemstack)
+		if a then
+			minetest.swap_node(pos, {name = "new_campfire:campfire_with_grille"})
+			minetest.after(new_campfire_flare_up, function()
+				if minetest.get_meta(pos):get_int("it_val") > 0 then
+					minetest.swap_node(pos, {name="new_campfire:campfire_active_with_grille"})
+				end
+			end)
+		end
+	end,
+
+	on_construct = function(pos)
+		local meta = minetest.get_meta(pos)
+		meta:set_int("it_val", 0)
+		meta:set_int("em_val", new_campfire_embers_ttl)
+		meta:set_string('infotext', S("Fireplace with embers"));
+	end,
+})
+
 minetest.register_node('new_campfire:fireplace_with_grille', {
 	description = S("Fireplace with grille"),
 	drawtype = 'mesh',
@@ -365,7 +494,8 @@ minetest.register_node('new_campfire:fireplace_with_grille', {
 	tiles = {
 		"default_stone.png",
 		"new_campfire_empty_tile.png",
-		"default_steel_block.png"
+		"default_steel_block.png",
+		"new_campfire_empty_tile.png"
 	},
 	buildable_to = false,
 	sunlight_propagates = false,
@@ -385,6 +515,8 @@ minetest.register_node('new_campfire:fireplace_with_grille', {
 	},
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
+		meta:set_int("it_val", 0)
+		meta:set_int("em_val", 0)
 		meta:set_string('infotext', S("Fireplace"));
 	end,
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
@@ -403,7 +535,8 @@ minetest.register_node('new_campfire:campfire_with_grille', {
 	tiles = {
 		"default_stone.png",
 		"default_wood.png",
-		"default_steel_block.png"
+		"default_steel_block.png",
+		"new_campfire_empty_tile.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
 	buildable_to = false,
@@ -416,6 +549,8 @@ minetest.register_node('new_campfire:campfire_with_grille', {
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
+		meta:set_int("it_val", 0)
+		meta:set_int("em_val", 0)
 		meta:set_string('infotext', S("Campfire"));
 	end,
 
@@ -455,7 +590,8 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 	tiles = {
 		"default_stone.png",
 		"default_wood.png",
-		"default_steel_block.png"
+		"default_steel_block.png",
+		"new_campfire_empty_tile.png"
 	},
 	inventory_image = "new_campfire_campfire.png",
 	buildable_to = false,
@@ -488,6 +624,7 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_int('it_val', new_campfire_ttl);
+		meta:set_int("em_val", 0)
 		infotext_edit(meta)
 		minetest.get_node_timer(pos):start(2)
 	end,
@@ -507,12 +644,34 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 	end,
 })
 
--- ABM
+-- ABMs
+
 minetest.register_abm({
-	nodenames = {"new_campfire:campfire_active", "new_campfire:campfire_active_with_grille"},
---    neighbors = {"group:puts_out_fire"},
-	interval = 1.0, -- Run every 3 seconds
-	chance = 1, -- Select every 1 in 1 nodes
+	nodenames = {
+		"new_campfire:fireplace_with_embers",
+		"new_campfire:fireplace_with_embers_with_grille"
+	},
+	interval = 1.0, -- Run every second
+	chance = 1, -- Select every node
+	catch_up = false,
+	action = function(pos, node, active_object_count, active_object_count_wider)
+		local meta = minetest.get_meta(pos)
+		local em_val = meta:get_int("em_val")
+		meta:set_int("em_val", em_val - 1)
+		if em_val <= 0 then
+			burn_out(pos, node)
+		end
+	end
+})
+
+
+minetest.register_abm({
+	nodenames = {
+		"new_campfire:campfire_active",
+		"new_campfire:campfire_active_with_grille"
+	},
+	interval = 1.0, -- Run every second
+	chance = 1, -- Select every node
 	catch_up = false,
 
 	action = function(pos, node, active_object_count, active_object_count_wider)
@@ -522,7 +681,11 @@ minetest.register_abm({
 			{"group:water"}
 		)
 		if #fpos > 0 then
-			minetest.set_node(pos, {name = string.gsub(node.name, "_active", "")})
+			if string.find(node.name, "embers") then
+				burn_out(pos, node)
+			else
+				minetest.set_node(pos, {name = string.gsub(node.name, "_active", "")})
+			end
 			minetest.sound_play("fire_extinguish_flame",{pos = pos, max_hear_distance = 16, gain = 0.15})
 		else
 			local meta = minetest.get_meta(pos)
@@ -530,9 +693,7 @@ minetest.register_abm({
 
 			if new_campfire_limit and new_campfire_ttl > 0 then
 				if it_val <= 0 then
-					minetest.remove_node(pos)
-					minetest.set_node(pos, {name = string.gsub(node.name, "campfire_active", "fireplace")} )
-					minetest.add_item(pos, "new_campfire:ash")
+					burn_out(pos, node)
 					return
 				end
 				meta:set_int('it_val', it_val);
