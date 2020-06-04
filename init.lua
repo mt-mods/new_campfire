@@ -371,8 +371,15 @@ minetest.register_node('new_campfire:fireplace_with_grille', {
 	selection_box = grille_sbox,
 	node_box = grille_cbox,
 	sounds = default.node_sound_stone_defaults(),
-	drop = {max_items = 3, items = {{items = {"stairs:slab_cobble 3"}}}},
-
+	drop = {
+		max_items = 4,
+		items = {
+			{
+				items = {"stairs:slab_cobble 3"}
+				items = {"new_campfire:grille 1"}
+			}
+		}
+	},
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_string('infotext', S("Fireplace"));
@@ -420,6 +427,15 @@ minetest.register_node('new_campfire:campfire_with_grille', {
 			})
 		end
 	end,
+	drop = {
+		max_items = 4,
+		items = {
+			{
+				items = {"new_campfire:campfire 1"},
+				items = {"new_campfire:grille 1"}
+			}
+		}
+	},
 })
 
 minetest.register_node('new_campfire:campfire_active_with_grille', {
@@ -438,7 +454,15 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 	paramtype = 'none',
 	light_source = 13,
 	damage_per_second = 3,
-	drop = "new_campfire:campfire",
+	drop = {
+		max_items = 4,
+		items = {
+			{
+				items = {"new_campfire:campfire 1"},
+				items = {"new_campfire:grille 1"}
+			}
+		}
+	},
 	sounds = default.node_sound_stone_defaults(),
 	selection_box = grille_sbox,
 	node_box = grille_cbox,
