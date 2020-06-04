@@ -1,12 +1,13 @@
 -- VARIABLES
-new_campfire_cooking = 1        -- nil - not cooked, 1 - cooked
-new_campfire_limit = 1          -- nil - unlimited campfire, 1 - limited
-new_campfire_ttl = 30           -- Time in seconds until a fire burns down into embers
-new_campfire_flare_up = 2       -- seconds from adding a stick to embers before it flares into a fire again
-new_campfire_embers_ttl = 60    -- seconds until embers burn out completely leaving ash and an empty fireplace.
-new_campfire_stick_time = new_campfire_ttl/2;   -- How long does the stick increase. In sec.
 
 new_campfire = {}
+
+new_campfire.cooking = 1        -- nil - not cooked, 1 - cooked
+new_campfire.limited = 1        -- nil - unlimited campfire, 1 - limited
+new_campfire.flames_ttl = 30    -- Time in seconds until a fire burns down into embers
+new_campfire.embers_ttl = 60    -- seconds until embers burn out completely leaving ash and an empty fireplace.
+new_campfire.flare_up = 2       -- seconds from adding a stick to embers before it flares into a fire again
+new_campfire.stick_time = new_campfire.flames_ttl/2;   -- How long does the stick increase. In sec.
 
 -- Load support for intllib.
 	local MP = minetest.get_modpath(minetest.get_current_modname())
@@ -122,13 +123,13 @@ end
 local function infotext_edit(meta)
 	local infotext = S("Active campfire")
 
-	if new_campfire_limit and new_campfire_ttl > 0 then
+	if new_campfire.limited and new_campfire.flames_ttl > 0 then
 		local it_val = meta:get_int("it_val");
-		infotext = infotext..indicator(new_campfire_ttl, it_val)
+		infotext = infotext..indicator(new_campfire.flames_ttl, it_val)
 	end
 
 	local cooked_time = meta:get_int('cooked_time');
-	if new_campfire_cooking and cooked_time ~= 0 then
+	if new_campfire.cooking and cooked_time ~= 0 then
 		local cooked_cur_time = meta:get_int('cooked_cur_time');
 		infotext = infotext.."\n"..S("Cooking")..indicator(cooked_time, cooked_cur_time)
 	end
@@ -141,7 +142,7 @@ local function cooking(pos, itemstack)
 	local cooked, _ = minetest.get_craft_result({method = "cooking", width = 1, items = {itemstack}})
 	local cookable = cooked.time ~= 0
 
-	if cookable and new_campfire_cooking then
+	if cookable and new_campfire.cooking then
 		local eat_y = ItemStack(cooked.item:to_table().name):get_definition().on_use
 		if string.find(minetest.serialize(eat_y), "do_item_eat") and meta:get_int("cooked_time") == 0 then
 			meta:set_int('cooked_time', cooked.time);
@@ -190,7 +191,7 @@ local function add_stick(pos, itemstack)
 	local meta = minetest.get_meta(pos)
 	local name = itemstack:get_name()
 	if itemstack:get_definition().groups.stick == 1 then
-		local it_val = meta:get_int("it_val") + (new_campfire_ttl);
+		local it_val = meta:get_int("it_val") + (new_campfire.flames_ttl);
 		meta:set_int('it_val', it_val);
 		effect(
 			pos,
@@ -364,7 +365,7 @@ minetest.register_node('new_campfire:campfire_active', {
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_int('it_val', new_campfire_ttl)
+		meta:set_int('it_val', new_campfire.flames_ttl)
 		meta:set_int("em_val", 0)
 		infotext_edit(meta)
 		minetest.get_node_timer(pos):start(2)
@@ -411,7 +412,7 @@ minetest.register_node('new_campfire:fireplace_with_embers', {
 		local a=add_stick(pos, itemstack)
 		if a then
 			minetest.swap_node(pos, {name = "new_campfire:campfire"})
-			minetest.after(new_campfire_flare_up, function()
+			minetest.after(new_campfire.flare_up, function()
 				if minetest.get_meta(pos):get_int("it_val") > 0 then
 					minetest.swap_node(pos, {name="new_campfire:campfire_active"})
 				end
@@ -425,7 +426,7 @@ minetest.register_node('new_campfire:fireplace_with_embers', {
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_int("it_val", 0)
-		meta:set_int("em_val", new_campfire_embers_ttl)
+		meta:set_int("em_val", new_campfire.embers_ttl)
 		meta:set_string('infotext', S("Fireplace with embers"));
 	end,
 })
@@ -471,7 +472,7 @@ minetest.register_node('new_campfire:fireplace_with_embers_with_grille', {
 		local a=add_stick(pos, itemstack)
 		if a then
 			minetest.swap_node(pos, {name = "new_campfire:campfire_with_grille"})
-			minetest.after(new_campfire_flare_up, function()
+			minetest.after(new_campfire.flare_up, function()
 				if minetest.get_meta(pos):get_int("it_val") > 0 then
 					minetest.swap_node(pos, {name="new_campfire:campfire_active_with_grille"})
 				end
@@ -482,7 +483,7 @@ minetest.register_node('new_campfire:fireplace_with_embers_with_grille', {
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
 		meta:set_int("it_val", 0)
-		meta:set_int("em_val", new_campfire_embers_ttl)
+		meta:set_int("em_val", new_campfire.embers_ttl)
 		meta:set_string('infotext', S("Fireplace with embers"));
 	end,
 })
@@ -623,7 +624,7 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_int('it_val', new_campfire_ttl);
+		meta:set_int('it_val', new_campfire.flames_ttl);
 		meta:set_int("em_val", 0)
 		infotext_edit(meta)
 		minetest.get_node_timer(pos):start(2)
@@ -691,7 +692,7 @@ minetest.register_abm({
 			local meta = minetest.get_meta(pos)
 			local it_val = meta:get_int("it_val") - 1;
 
-			if new_campfire_limit and new_campfire_ttl > 0 then
+			if new_campfire.limited and new_campfire.flames_ttl > 0 then
 				if it_val <= 0 then
 					burn_out(pos, node)
 					return
@@ -699,7 +700,7 @@ minetest.register_abm({
 				meta:set_int('it_val', it_val);
 			end
 
-			if new_campfire_cooking then
+			if new_campfire.cooking then
 				if meta:get_int('cooked_cur_time') <= meta:get_int('cooked_time') then
 					meta:set_int('cooked_cur_time', meta:get_int('cooked_cur_time') + 1);
 				else
