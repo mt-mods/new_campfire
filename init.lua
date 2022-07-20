@@ -617,7 +617,7 @@ minetest.register_node('new_campfire:campfire_active_with_grille', {
 		local name = itemstack:get_name()
 		local a=add_stick(pos, itemstack)
 		if not a then
-			cooking(pos, itemstack)
+			return cooking(pos, itemstack)
 		end
 	end,
 
