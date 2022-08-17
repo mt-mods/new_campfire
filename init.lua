@@ -719,9 +719,9 @@ minetest.register_abm({
 minetest.register_craft({
     output = "new_campfire:grille",
 	recipe = {
-		{ "basic_materials:steel_bar", "",                           "basic_materials:steel_bar" },
-		{ "",                          "basic_materials:steel_wire", "" },
-		{ "basic_materials:steel_bar", "",                           "basic_materials:steel_bar" },
+		{ "default:iron_ingot", "",                           "default:iron_ingot" },
+		{ "",                          "xpanes:bar_flat", "" },
+		{ "default:iron_ingot", "",                           "default:iron_ingot" },
 	}
 })
 
