@@ -716,14 +716,25 @@ minetest.register_abm({
 
 -- CRAFTS
 
-minetest.register_craft({
-    output = "new_campfire:grille",
-	recipe = {
-		{ "basic_materials:steel_bar", "",                           "basic_materials:steel_bar" },
-		{ "",                          "basic_materials:steel_wire", "" },
-		{ "basic_materials:steel_bar", "",                           "basic_materials:steel_bar" },
-	}
-})
+if minetest.get_modpath("basic_materials") then
+	minetest.register_craft({
+		output = "new_campfire:grille",
+		recipe = {
+			{"basic_materials:steel_bar", "", "basic_materials:steel_bar"},
+			{"", "basic_materials:steel_wire", ""},
+			{"basic_materials:steel_bar", "", "basic_materials:steel_bar"}
+		}
+	})
+else
+	minetest.register_craft({
+		output = "new_campfire:grille",
+		recipe = {
+			{"default:iron_ingot", "", "default:iron_ingot"},
+			{"", "xpanes:bar_flat", ""},
+			{"default:iron_ingot", "", "default:iron_ingot"}
+		}
+	})
+end
 
 minetest.register_craft({
 	output = "new_campfire:campfire",
