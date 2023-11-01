@@ -729,9 +729,9 @@ else
 	minetest.register_craft({
 		output = "new_campfire:grille",
 		recipe = {
-			{"default:iron_ingot", "", "default:iron_ingot"},
+			{"default:steel_ingot", "", "default:steel_ingot"},
 			{"", "xpanes:bar_flat", ""},
-			{"default:iron_ingot", "", "default:iron_ingot"}
+			{"default:steel_ingot", "", "default:steel_ingot"}
 		}
 	})
 end
