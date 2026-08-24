@@ -1,5 +1,5 @@
 -- Translation support
-local S = minetest.get_translator("new_campfire")
+local S = core.get_translator("new_campfire")
 
 -- VARIABLES
 
@@ -14,8 +14,8 @@ new_campfire.stick_time = new_campfire.flames_ttl / 2 -- How long does the stick
 
 -- FUNCTIONS
 local function fire_particles_on(pos) -- 3 layers of fire
-	local meta = minetest.get_meta(pos)
-	local id1 = minetest.add_particlespawner({ -- 1 layer big particles fire
+	local meta = core.get_meta(pos)
+	local id1 = core.add_particlespawner({ -- 1 layer big particles fire
 		amount = 9,
 		time = 1.3,
 		minpos = { x = pos.x - 0.2, y = pos.y - 0.4, z = pos.z - 0.2 },
@@ -35,7 +35,7 @@ local function fire_particles_on(pos) -- 3 layers of fire
 	})
 	meta:set_int("layer_1", id1)
 
-	local id2 = minetest.add_particlespawner({ -- 2 layer smol particles fire
+	local id2 = core.add_particlespawner({ -- 2 layer smol particles fire
 		amount = 1,
 		time = 1.3,
 		minpos = { x = pos.x - 0.1, y = pos.y, z = pos.z - 0.1 },
@@ -55,7 +55,7 @@ local function fire_particles_on(pos) -- 3 layers of fire
 	})
 	meta:set_int("layer_2", id2)
 
-	local id3 = minetest.add_particlespawner({ --3 layer smoke
+	local id3 = core.add_particlespawner({ --3 layer smoke
 		amount = 1,
 		time = 1.3,
 		minpos = { x = pos.x - 0.1, y = pos.y - 0.2, z = pos.z - 0.1 },
@@ -77,13 +77,13 @@ local function fire_particles_on(pos) -- 3 layers of fire
 end
 
 local function fire_particles_off(pos)
-	local meta = minetest.get_meta(pos)
+	local meta = core.get_meta(pos)
 	local id_1 = meta:get_int("layer_1")
 	local id_2 = meta:get_int("layer_2")
 	local id_3 = meta:get_int("layer_3")
-	minetest.delete_particlespawner(id_1)
-	minetest.delete_particlespawner(id_2)
-	minetest.delete_particlespawner(id_3)
+	core.delete_particlespawner(id_1)
+	core.delete_particlespawner(id_2)
+	core.delete_particlespawner(id_3)
 end
 
 -- we do this to determine the number of bytes each block symbol takes in the
@@ -106,7 +106,7 @@ local function indicator(maxVal, curVal)
 end
 
 local function effect(pos, texture, vlc, acc, time, size)
-	minetest.add_particle({
+	core.add_particle({
 		pos = pos,
 		velocity = vlc,
 		acceleration = acc,
@@ -136,13 +136,13 @@ local function infotext_edit(meta)
 end
 
 local function cooking(pos, itemstack)
-	local meta = minetest.get_meta(pos)
-	local cooked, _ = minetest.get_craft_result({ method = "cooking", width = 1, items = { itemstack } })
+	local meta = core.get_meta(pos)
+	local cooked, _ = core.get_craft_result({ method = "cooking", width = 1, items = { itemstack } })
 	local cookable = cooked.time ~= 0
 
 	if cookable and new_campfire.cooking then
 		local eat_y = ItemStack(cooked.item:to_table().name):get_definition().on_use
-		if string.find(minetest.serialize(eat_y), "do_item_eat") and meta:get_int("cooked_time") == 0 then
+		if string.find(core.serialize(eat_y), "do_item_eat") and meta:get_int("cooked_time") == 0 then
 			meta:set_int("cooked_time", cooked.time)
 			meta:set_int("cooked_cur_time", 0)
 			local name = itemstack:get_name()
@@ -159,24 +159,24 @@ local function cooking(pos, itemstack)
 				4
 			)
 
-			minetest.after(cooked.time / 2, function()
+			core.after(cooked.time / 2, function()
 				if meta:get_int("it_val") > 0 then
 					local item = cooked.item:to_table().name
-					minetest.after(cooked.time / 2, function()
+					core.after(cooked.time / 2, function()
 						if meta:get_int("it_val") > 0 then
-							minetest.add_item({ x = pos.x, y = pos.y + 0.2, z = pos.z }, item)
+							core.add_item({ x = pos.x, y = pos.y + 0.2, z = pos.z }, item)
 							meta:set_int("cooked_time", 0)
 							meta:set_int("cooked_cur_time", 0)
 						else
-							minetest.add_item({ x = pos.x, y = pos.y + 0.2, z = pos.z }, name)
+							core.add_item({ x = pos.x, y = pos.y + 0.2, z = pos.z }, name)
 						end
 					end, item)
 				else
-					minetest.add_item({ x = pos.x, y = pos.y + 0.2, z = pos.z }, name)
+					core.add_item({ x = pos.x, y = pos.y + 0.2, z = pos.z }, name)
 				end
 			end)
 
-			if not minetest.setting_getbool("creative_mode") then
+			if not core.setting_getbool("creative_mode") then
 				itemstack:take_item()
 				return itemstack
 			end
@@ -185,13 +185,13 @@ local function cooking(pos, itemstack)
 end
 
 local function add_stick(pos, itemstack)
-	local meta = minetest.get_meta(pos)
+	local meta = core.get_meta(pos)
 	if itemstack:get_definition().groups.stick == 1 then
 		local it_val = meta:get_int("it_val") + new_campfire.flames_ttl
 		meta:set_int("it_val", it_val)
 		effect(pos, "default_stick.png", { x = 0, y = -1, z = 0 }, { x = 0, y = 0, z = 0 }, 1, 6)
 		infotext_edit(meta)
-		if not minetest.setting_getbool("creative_mode") then
+		if not core.setting_getbool("creative_mode") then
 			itemstack:take_item()
 			return itemstack
 		end
@@ -201,11 +201,11 @@ end
 
 local function burn_out(pos, node)
 	if string.find(node.name, "embers") then
-		minetest.set_node(pos, { name = string.gsub(node.name, "_with_embers", "") })
-		minetest.add_item(pos, "new_campfire:ash")
+		core.set_node(pos, { name = string.gsub(node.name, "_with_embers", "") })
+		core.add_item(pos, "new_campfire:ash")
 	else
 		fire_particles_off(pos)
-		minetest.set_node(pos, { name = string.gsub(node.name, "campfire_active", "fireplace_with_embers") })
+		core.set_node(pos, { name = string.gsub(node.name, "campfire_active", "fireplace_with_embers") })
 	end
 end
 
@@ -232,7 +232,7 @@ local grille_cbox = {
 	},
 }
 
-minetest.register_node("new_campfire:fireplace", {
+core.register_node("new_campfire:fireplace", {
 	description = S("Fireplace"),
 	drawtype = "mesh",
 	mesh = "contained_campfire.obj",
@@ -257,22 +257,22 @@ minetest.register_node("new_campfire:fireplace", {
 		local name = itemstack:get_name()
 		local a = add_stick(pos, itemstack)
 		if a then
-			minetest.swap_node(pos, { name = "new_campfire:campfire" })
+			core.swap_node(pos, { name = "new_campfire:campfire" })
 		elseif name == "new_campfire:grille" then
 			itemstack:take_item()
-			minetest.swap_node(pos, { name = "new_campfire:fireplace_with_grille" })
+			core.swap_node(pos, { name = "new_campfire:fireplace_with_grille" })
 		end
 	end,
 
 	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		meta:set_string("infotext", S("Fireplace"))
 		meta:set_int("it_val", 0)
 		meta:set_int("em_val", 0)
 	end,
 })
 
-minetest.register_node("new_campfire:campfire", {
+core.register_node("new_campfire:campfire", {
 	description = S("Campfire"),
 	drawtype = "mesh",
 	mesh = "contained_campfire.obj",
@@ -294,7 +294,7 @@ minetest.register_node("new_campfire:campfire", {
 	sounds = default.node_sound_stone_defaults(),
 
 	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		meta:set_int("it_val", 0)
 		meta:set_int("em_val", 0)
 		meta:set_string("infotext", S("Campfire"))
@@ -303,9 +303,9 @@ minetest.register_node("new_campfire:campfire", {
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		local itemname = itemstack:get_name()
 		if itemname == "fire:flint_and_steel" then
-			minetest.sound_play("fire_flint_and_steel", { pos = pos, gain = 0.5, max_hear_distance = 8 })
-			minetest.set_node(pos, { name = "new_campfire:campfire_active" })
-			minetest.add_particle({
+			core.sound_play("fire_flint_and_steel", { pos = pos, gain = 0.5, max_hear_distance = 8 })
+			core.set_node(pos, { name = "new_campfire:campfire_active" })
+			core.add_particle({
 				pos = { x = pos.x, y = pos.y, z = pos.z },
 				velocity = { x = 0, y = 0.1, z = 0 },
 				acceleration = { x = 0, y = 0, z = 0 },
@@ -318,12 +318,12 @@ minetest.register_node("new_campfire:campfire", {
 			})
 		elseif itemname == "new_campfire:grille" then
 			itemstack:take_item()
-			minetest.swap_node(pos, { name = "new_campfire:campfire_with_grille" })
+			core.swap_node(pos, { name = "new_campfire:campfire_with_grille" })
 		end
 	end,
 })
 
-minetest.register_node("new_campfire:campfire_active", {
+core.register_node("new_campfire:campfire_active", {
 	description = S("Active campfire"),
 	drawtype = "mesh",
 	mesh = "contained_campfire.obj",
@@ -352,28 +352,28 @@ minetest.register_node("new_campfire:campfire_active", {
 		if not a then
 			if name == "new_campfire:grille" then
 				itemstack:take_item()
-				minetest.swap_node(pos, { name = "new_campfire:campfire_active_with_grille" })
+				core.swap_node(pos, { name = "new_campfire:campfire_active_with_grille" })
 			end
 		end
 	end,
 
 	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		meta:set_int("it_val", new_campfire.flames_ttl)
 		meta:set_int("em_val", 0)
 		infotext_edit(meta)
-		minetest.get_node_timer(pos):start(2)
+		core.get_node_timer(pos):start(2)
 	end,
 
 	on_destruct = function(pos, oldnode, oldmetadata, digger)
 		fire_particles_off(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		local handle = meta:get_int("handle")
-		minetest.sound_stop(handle)
+		core.sound_stop(handle)
 	end,
 })
 
-minetest.register_node("new_campfire:fireplace_with_embers", {
+core.register_node("new_campfire:fireplace_with_embers", {
 	description = S("Fireplace with embers"),
 	drawtype = "mesh",
 	mesh = "contained_campfire.obj",
@@ -407,27 +407,27 @@ minetest.register_node("new_campfire:fireplace_with_embers", {
 		local name = itemstack:get_name()
 		local a = add_stick(pos, itemstack)
 		if a then
-			minetest.swap_node(pos, { name = "new_campfire:campfire" })
-			minetest.after(new_campfire.flare_up, function()
-				if minetest.get_meta(pos):get_int("it_val") > 0 then
-					minetest.swap_node(pos, { name = "new_campfire:campfire_active" })
+			core.swap_node(pos, { name = "new_campfire:campfire" })
+			core.after(new_campfire.flare_up, function()
+				if core.get_meta(pos):get_int("it_val") > 0 then
+					core.swap_node(pos, { name = "new_campfire:campfire_active" })
 				end
 			end)
 		elseif name == "new_campfire:grille" then
 			itemstack:take_item()
-			minetest.swap_node(pos, { name = "new_campfire:fireplace_with_embers_with_grille" })
+			core.swap_node(pos, { name = "new_campfire:fireplace_with_embers_with_grille" })
 		end
 	end,
 
 	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		meta:set_int("it_val", 0)
 		meta:set_int("em_val", new_campfire.embers_ttl)
 		meta:set_string("infotext", S("Fireplace with embers"))
 	end,
 })
 
-minetest.register_node("new_campfire:fireplace_with_embers_with_grille", {
+core.register_node("new_campfire:fireplace_with_embers_with_grille", {
 	description = S("Fireplace with embers and grille"),
 	drawtype = "mesh",
 	mesh = "contained_campfire.obj",
@@ -467,24 +467,24 @@ minetest.register_node("new_campfire:fireplace_with_embers_with_grille", {
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		local a = add_stick(pos, itemstack)
 		if a then
-			minetest.swap_node(pos, { name = "new_campfire:campfire_with_grille" })
-			minetest.after(new_campfire.flare_up, function()
-				if minetest.get_meta(pos):get_int("it_val") > 0 then
-					minetest.swap_node(pos, { name = "new_campfire:campfire_active_with_grille" })
+			core.swap_node(pos, { name = "new_campfire:campfire_with_grille" })
+			core.after(new_campfire.flare_up, function()
+				if core.get_meta(pos):get_int("it_val") > 0 then
+					core.swap_node(pos, { name = "new_campfire:campfire_active_with_grille" })
 				end
 			end)
 		end
 	end,
 
 	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		meta:set_int("it_val", 0)
 		meta:set_int("em_val", new_campfire.embers_ttl)
 		meta:set_string("infotext", S("Fireplace with embers"))
 	end,
 })
 
-minetest.register_node("new_campfire:fireplace_with_grille", {
+core.register_node("new_campfire:fireplace_with_grille", {
 	description = S("Fireplace with grille"),
 	drawtype = "mesh",
 	mesh = "contained_campfire.obj",
@@ -512,7 +512,7 @@ minetest.register_node("new_campfire:fireplace_with_grille", {
 		},
 	},
 	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		meta:set_int("it_val", 0)
 		meta:set_int("em_val", 0)
 		meta:set_string("infotext", S("Fireplace"))
@@ -520,12 +520,12 @@ minetest.register_node("new_campfire:fireplace_with_grille", {
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		local a = add_stick(pos, itemstack)
 		if a then
-			minetest.swap_node(pos, { name = "new_campfire:campfire_with_grille" })
+			core.swap_node(pos, { name = "new_campfire:campfire_with_grille" })
 		end
 	end,
 })
 
-minetest.register_node("new_campfire:campfire_with_grille", {
+core.register_node("new_campfire:campfire_with_grille", {
 	description = S("Campfire with grille"),
 	drawtype = "mesh",
 	mesh = "contained_campfire.obj",
@@ -547,7 +547,7 @@ minetest.register_node("new_campfire:campfire_with_grille", {
 	sounds = default.node_sound_stone_defaults(),
 
 	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		meta:set_int("it_val", 0)
 		meta:set_int("em_val", 0)
 		meta:set_string("infotext", S("Campfire"))
@@ -555,9 +555,9 @@ minetest.register_node("new_campfire:campfire_with_grille", {
 
 	on_rightclick = function(pos, node, player, itemstack, pointed_thing)
 		if itemstack:get_name() == "fire:flint_and_steel" then
-			minetest.sound_play("fire_flint_and_steel", { pos = pos, gain = 0.5, max_hear_distance = 8 })
-			minetest.set_node(pos, { name = "new_campfire:campfire_active_with_grille" })
-			minetest.add_particle({
+			core.sound_play("fire_flint_and_steel", { pos = pos, gain = 0.5, max_hear_distance = 8 })
+			core.set_node(pos, { name = "new_campfire:campfire_active_with_grille" })
+			core.add_particle({
 				pos = { x = pos.x, y = pos.y, z = pos.z },
 				velocity = { x = 0, y = 0.1, z = 0 },
 				acceleration = { x = 0, y = 0, z = 0 },
@@ -580,7 +580,7 @@ minetest.register_node("new_campfire:campfire_with_grille", {
 	},
 })
 
-minetest.register_node("new_campfire:campfire_active_with_grille", {
+core.register_node("new_campfire:campfire_active_with_grille", {
 	description = S("Active campfire with grille"),
 	drawtype = "mesh",
 	mesh = "contained_campfire.obj",
@@ -619,32 +619,31 @@ minetest.register_node("new_campfire:campfire_active_with_grille", {
 	end,
 
 	on_construct = function(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		meta:set_int("it_val", new_campfire.flames_ttl)
 		meta:set_int("em_val", 0)
 		infotext_edit(meta)
-		minetest.get_node_timer(pos):start(2)
+		core.get_node_timer(pos):start(2)
 	end,
 
 	on_destruct = function(pos, oldnode, oldmetadata, digger)
 		fire_particles_off(pos)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		local handle = meta:get_int("handle")
-		minetest.sound_stop(handle)
+		core.sound_stop(handle)
 	end,
 
 	on_timer = function(pos) -- Every 6 seconds play sound fire_small
-		local meta = minetest.get_meta(pos)
-		local handle =
-			minetest.sound_play("fire_small", { pos = pos, max_hear_distance = 18, loop = false, gain = 0.1 })
+		local meta = core.get_meta(pos)
+		local handle = core.sound_play("fire_small", { pos = pos, max_hear_distance = 18, loop = false, gain = 0.1 })
 		meta:set_int("handle", handle)
-		minetest.get_node_timer(pos):start(6)
+		core.get_node_timer(pos):start(6)
 	end,
 })
 
 -- ABMs
 
-minetest.register_abm({
+core.register_abm({
 	nodenames = {
 		"new_campfire:fireplace_with_embers",
 		"new_campfire:fireplace_with_embers_with_grille",
@@ -653,7 +652,7 @@ minetest.register_abm({
 	chance = 1, -- Select every node
 	catch_up = false,
 	action = function(pos, node, active_object_count, active_object_count_wider)
-		local meta = minetest.get_meta(pos)
+		local meta = core.get_meta(pos)
 		local em_val = meta:get_int("em_val")
 		meta:set_int("em_val", em_val - 1)
 		if em_val <= 0 then
@@ -662,7 +661,7 @@ minetest.register_abm({
 	end,
 })
 
-minetest.register_abm({
+core.register_abm({
 	nodenames = {
 		"new_campfire:campfire_active",
 		"new_campfire:campfire_active_with_grille",
@@ -672,7 +671,7 @@ minetest.register_abm({
 	catch_up = false,
 
 	action = function(pos, node, active_object_count, active_object_count_wider)
-		local fpos = minetest.find_nodes_in_area(
+		local fpos = core.find_nodes_in_area(
 			{ x = pos.x - 1, y = pos.y, z = pos.z - 1 },
 			{ x = pos.x + 1, y = pos.y + 1, z = pos.z + 1 },
 			{ "group:water" }
@@ -681,11 +680,11 @@ minetest.register_abm({
 			if string.find(node.name, "embers") then
 				burn_out(pos, node)
 			else
-				minetest.set_node(pos, { name = string.gsub(node.name, "_active", "") })
+				core.set_node(pos, { name = string.gsub(node.name, "_active", "") })
 			end
-			minetest.sound_play("fire_extinguish_flame", { pos = pos, max_hear_distance = 16, gain = 0.15 })
+			core.sound_play("fire_extinguish_flame", { pos = pos, max_hear_distance = 16, gain = 0.15 })
 		else
-			local meta = minetest.get_meta(pos)
+			local meta = core.get_meta(pos)
 			local it_val = meta:get_int("it_val") - 1
 
 			if new_campfire.limited and new_campfire.flames_ttl > 0 then
@@ -713,8 +712,8 @@ minetest.register_abm({
 
 -- CRAFTS
 
-if minetest.get_modpath("basic_materials") then
-	minetest.register_craft({
+if core.get_modpath("basic_materials") then
+	core.register_craft({
 		output = "new_campfire:grille",
 		recipe = {
 			{ "basic_materials:steel_bar", "", "basic_materials:steel_bar" },
@@ -723,7 +722,7 @@ if minetest.get_modpath("basic_materials") then
 		},
 	})
 else
-	minetest.register_craft({
+	core.register_craft({
 		output = "new_campfire:grille",
 		recipe = {
 			{ "default:steel_ingot", "", "default:steel_ingot" },
@@ -733,7 +732,7 @@ else
 	})
 end
 
-minetest.register_craft({
+core.register_craft({
 	output = "new_campfire:campfire",
 	recipe = {
 		{ "", "group:stick", "" },
@@ -744,19 +743,19 @@ minetest.register_craft({
 
 -- ITEMS
 
-minetest.register_craftitem("new_campfire:grille", {
+core.register_craftitem("new_campfire:grille", {
 	description = S("Metal Grille"),
 	inventory_image = "new_campfire_grille.png",
 })
 
-minetest.register_craftitem("new_campfire:ash", {
+core.register_craftitem("new_campfire:ash", {
 	description = S("Ash"),
 	inventory_image = "new_campfire_ash.png",
 })
 
 -- EXTRA
 
-if not minetest.get_modpath("campfire") then
-	minetest.register_alias("campfire:campfire", "new_campfire:campfire")
-	minetest.register_alias("campfire:campfire_active", "new_campfire:campfire")
+if not core.get_modpath("campfire") then
+	core.register_alias("campfire:campfire", "new_campfire:campfire")
+	core.register_alias("campfire:campfire_active", "new_campfire:campfire")
 end
